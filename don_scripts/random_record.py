@@ -58,7 +58,7 @@ except IndexError:
 import carla
 from carla import ColorConverter as cc
 
-from agents.navigation.behavior_agent import BehaviorAgent  # pylint: disable=import-error
+from agents.navigation.random_agent import RandomAgent  # pylint: disable=import-error
 from agents.navigation.basic_agent import BasicAgent  # pylint: disable=import-error
 from agents.navigation.constant_velocity_agent import ConstantVelocityAgent  # pylint: disable=import-error
 
@@ -870,7 +870,7 @@ def main():
     args = argparser.parse_args()
 
     # Set default output directory
-    args.output_dir = f'_output/automatic_control/{args.behavior}'
+    args.output_dir = '_output/automatic_control/random'
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
