@@ -59,6 +59,7 @@ import carla
 from carla import ColorConverter as cc
 
 from agents.navigation.random_agent import RandomAgent  # pylint: disable=import-error
+from agents.navigation.behavior_agent import BehaviorAgent  # pylint: disable=import-error
 from agents.navigation.basic_agent import BasicAgent  # pylint: disable=import-error
 from agents.navigation.constant_velocity_agent import ConstantVelocityAgent  # pylint: disable=import-error
 
@@ -751,7 +752,8 @@ def game_loop(args):
             agent.follow_speed_limits(True)
         elif args.agent == "Behavior":
             agent = BehaviorAgent(world.player, behavior=args.behavior)
-
+        elif args.agent == "Random":
+            agent = RandomAgent(world.player, behavior=args.behavior)
         # Set the agent destination
         spawn_points = world.map.get_spawn_points()
         # destination = random.choice(spawn_points).location
@@ -852,9 +854,9 @@ def main():
         help='Sets a new random destination upon reaching the previous one (default: False)')
     argparser.add_argument(
         "-a", "--agent", type=str,
-        choices=["Behavior", "Basic", "Constant"],
+        choices=["Behavior", "Basic", "Constant", "Random"],
         help="select which agent to run",
-        default="Behavior")
+        default="Random")
     argparser.add_argument(
         '-b', '--behavior', type=str,
         choices=["cautious", "normal", "aggressive"],
