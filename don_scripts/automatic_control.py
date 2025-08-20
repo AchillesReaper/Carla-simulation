@@ -587,12 +587,13 @@ class GnssSensor(object):
 class CameraManager(object):
     """ Class for camera management"""
 
-    def __init__(self, parent_actor, hud):
+    def __init__(self, parent_actor, hud, out_dir):
         """Constructor method"""
         self.sensor = None
         self.surface = None
         self._parent = parent_actor
         self.hud = hud
+        self.out_dir = out_dir
         self.recording = False
         bound_x = 0.5 + self._parent.bounding_box.extent.x
         bound_y = 0.5 + self._parent.bounding_box.extent.y
@@ -695,7 +696,7 @@ class CameraManager(object):
             array = array[:, :, ::-1]
             self.surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
         if self.recording:
-            image.save_to_disk('_out/%08d' % image.frame)
+            image.save_to_disk(f'{self.out_dir}/%08d' % image.frame)
 
 # ==============================================================================
 # -- Game Loop ---------------------------------------------------------
@@ -861,8 +862,16 @@ def main():
         help='Set seed for repeating executions (default: None)',
         default=None,
         type=int)
+    
+    argparser.add_argument(
+        '-t', '--trail',
+        help='[normal, random] Set trail for saving destination and policy (default: normal)',
+        default='normal',
+        type=str)
 
     args = argparser.parse_args()
+
+    args.out_dir = f'./_out/{args.trail}'
 
     args.width, args.height = [int(x) for x in args.res.split('x')]
 
