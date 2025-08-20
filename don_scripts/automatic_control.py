@@ -21,7 +21,8 @@ import numpy.random as random
 import re
 import sys
 import weakref
-
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from video_gen import gen_video
 try:
     import pygame
     from pygame.locals import KMOD_CTRL
@@ -61,7 +62,7 @@ from carla import ColorConverter as cc
 from agents.navigation.behavior_agent import BehaviorAgent  # pylint: disable=import-error
 from agents.navigation.basic_agent import BasicAgent  # pylint: disable=import-error
 from agents.navigation.constant_velocity_agent import ConstantVelocityAgent  # pylint: disable=import-error
-
+from agents.navigation.behavior_agent_random import RandomAgent  # pylint: disable=import-error
 
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
@@ -727,7 +728,7 @@ def game_loop(args):
         if args.sync:
             settings = sim_world.get_settings()
             settings.synchronous_mode = True
-            settings.fixed_delta_seconds = 0.05
+            settings.fixed_delta_seconds = 0.05  # 20 FPS (1 / 0.05 = 20)
             sim_world.apply_settings(settings)
 
             traffic_manager.set_synchronous_mode(True)
@@ -739,17 +740,20 @@ def game_loop(args):
         hud = HUD(args.width, args.height)
         world = World(client.get_world(), hud, args)
         controller = KeyboardControl(world)
-        if args.agent == "Basic":
-            agent = BasicAgent(world.player, 30)
-            agent.follow_speed_limits(True)
-        elif args.agent == "Constant":
-            agent = ConstantVelocityAgent(world.player, 30)
-            ground_loc = world.world.ground_projection(world.player.get_location(), 5)
-            if ground_loc:
-                world.player.set_location(ground_loc.location + carla.Location(z=0.01))
-            agent.follow_speed_limits(True)
-        elif args.agent == "Behavior":
-            agent = BehaviorAgent(world.player, behavior=args.behavior)
+        if args.trail == 'normal':
+            if args.agent == "Basic":
+                agent = BasicAgent(world.player, 30)
+                agent.follow_speed_limits(True)
+            elif args.agent == "Constant":
+                agent = ConstantVelocityAgent(world.player, 30)
+                ground_loc = world.world.ground_projection(world.player.get_location(), 5)
+                if ground_loc:
+                    world.player.set_location(ground_loc.location + carla.Location(z=0.01))
+                agent.follow_speed_limits(True)
+            elif args.agent == "Behavior":
+                agent = BehaviorAgent(world.player, behavior=args.behavior)
+        elif args.trail == 'random':
+            agent = RandomAgent(world.player, behavior=args.behavior)
 
         # Set the agent destination
         spawn_points = world.map.get_spawn_points()
@@ -860,8 +864,8 @@ def main():
         default='normal')
     argparser.add_argument(
         '-s', '--seed',
-        help='Set seed for repeating executions (default: None)',
-        default=None,
+        help='Set seed for repeating executions (default: 48)',
+        default=48,
         type=int)
     
     argparser.add_argument(
@@ -872,7 +876,7 @@ def main():
 
     args = argparser.parse_args()
 
-    args.out_dir = f'./_out/{args.trail}'
+    args.out_dir = f'./_out/{args.trail}_{args.seed}/img'
 
     args.width, args.height = [int(x) for x in args.res.split('x')]
 
@@ -889,6 +893,8 @@ def main():
     except KeyboardInterrupt:
         print('\nCancelled by user. Bye!')
 
+    finally:
+        gen_video(args.out_dir)
 
 if __name__ == '__main__':
     main()
